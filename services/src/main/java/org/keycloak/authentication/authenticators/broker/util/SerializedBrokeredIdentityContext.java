@@ -18,6 +18,7 @@
 package org.keycloak.authentication.authenticators.broker.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.jboss.logging.Logger;
 import org.keycloak.authentication.requiredactions.util.UpdateProfileContext;
 import org.keycloak.broker.provider.BrokeredIdentityContext;
 import org.keycloak.broker.provider.IdentityProvider;
@@ -46,7 +47,7 @@ import java.util.stream.Stream;
  * @author <a href="mailto:mposolda@redhat.com">Marek Posolda</a>
  */
 public class SerializedBrokeredIdentityContext implements UpdateProfileContext {
-
+    protected static final Logger logger = Logger.getLogger(SerializedBrokeredIdentityContext.class);
     private String id;
     private String brokerUsername;
     private String brokerSessionId;
@@ -308,11 +309,15 @@ public class SerializedBrokeredIdentityContext implements UpdateProfileContext {
         IdentityProviderDataMarshaller serializer = context.getIdp().getMarshaller();
 
         for (Map.Entry<String, Object> entry : context.getContextData().entrySet()) {
-            Object value = entry.getValue();
-            String serializedValue = serializer.serialize(value);
+            try {
+                Object value = entry.getValue();
+                String serializedValue = serializer.serialize(value);
 
-            ContextDataEntry ctxEntry = ContextDataEntry.create(value.getClass().getName(), serializedValue);
-            ctx.getContextData().put(entry.getKey(), ctxEntry);
+                ContextDataEntry ctxEntry = ContextDataEntry.create(value.getClass().getName(), serializedValue);
+                ctx.getContextData().put(entry.getKey(), ctxEntry);
+            } catch (NullPointerException e) {
+                logger.error("Error serializing context", e);
+            }
         }
         return ctx;
     }
