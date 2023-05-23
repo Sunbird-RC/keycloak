@@ -45,7 +45,9 @@ import java.util.Set;
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import java.text.DateFormat;  
+import java.util.Date;  
+import java.text.SimpleDateFormat; 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
  * @version $Revision: 1 $
@@ -94,6 +96,8 @@ public class UsernameTemplateMapper extends AbstractIdentityProviderMapper {
         TRANSFORMERS.put("uppercase", String::toUpperCase);
         TRANSFORMERS.put("lowercase", String::toLowerCase);
         TRANSFORMERS.put("localpart", UsernameTemplateMapper::getEmailLocalPart);
+        TRANSFORMERS.put("namepart", UsernameTemplateMapper::getNamePart);
+        TRANSFORMERS.put("dobformat", UsernameTemplateMapper::getFormatDOB);
     }
 
     public static final String PROVIDER_ID = "saml-username-idp-mapper";
@@ -104,6 +108,42 @@ public class UsernameTemplateMapper extends AbstractIdentityProviderMapper {
             return email.substring(0, index);
         } else {
             return email;
+        }
+    }
+    public static String getNamePart(String name) {
+        if(name == null || name.isEmpty() || name.trim().isEmpty()){
+            return "";
+        }
+        else{
+            try{
+                String lower_name=name.toLowerCase();
+                String [] nameParts = lower_name.split(" ");
+                int namePartsLength=nameParts.length;
+                if(namePartsLength>0){
+                    return nameParts[0];
+                }
+                else{
+                    return name;
+                }
+            }
+            catch(Exception e){
+                return "";
+            }
+        }
+    }
+    public static String getFormatDOB(String dob) {
+        if(dob == null || dob.isEmpty() || dob.trim().isEmpty()){
+            return "";
+        }
+        else{
+            try{
+                Date dob_date=new SimpleDateFormat("dd/MM/yyyy").parse(dob);  
+                DateFormat f = new SimpleDateFormat("ddMMyyyy");
+                return f.format(dob_date);
+            }
+            catch(Exception e){
+                return "";
+            }
         }
     }
 
